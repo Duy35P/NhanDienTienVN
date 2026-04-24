@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nhận Dạng Tiền Polymer VN</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:        #0b0e17;
+    --surface:   #131826;
+    --surface2:  #1a2035;
+    --border:    #242d45;
+    --gold:      #f5c842;
+    --gold-dim:  #a88520;
+    --green:     #22c55e;
+    --red:       #ef4444;
+    --blue:      #60a5fa;
+    --text:      #e8eaf0;
+    --text-dim:  #7880a0;
+    --radius:    14px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Be Vietnam Pro', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── BACKGROUND PATTERN ── */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image:
+      radial-gradient(circle at 20% 20%, rgba(245,200,66,.07) 0%, transparent 50%),
+      radial-gradient(circle at 80% 80%, rgba(96,165,250,.05) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    position: relative; z-index: 1;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 40px 20px 80px;
+  }
+
+  /* ── HEADER ── */
+  header {
+    text-align: center;
+    margin-bottom: 48px;
+    animation: fadeDown .6s ease both;
+  }
+
+  .badge {
+    display: inline-block;
+    background: rgba(245,200,66,.12);
+    border: 1px solid rgba(245,200,66,.3);
+    color: var(--gold);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    padding: 5px 14px;
+    border-radius: 100px;
+    margin-bottom: 20px;
+  }
+
+  h1 {
+    font-size: clamp(28px, 5vw, 46px);
+    font-weight: 800;
+    line-height: 1.15;
+    margin-bottom: 12px;
+  }
+
+  h1 span { color: var(--gold); }
+
+  .subtitle {
+    color: var(--text-dim);
+    font-size: 15px;
+    font-weight: 400;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .tag {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 3px 10px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--blue);
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* ── MAIN GRID ── */
+  .main-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    align-items: start;
+  }
+
+  @media(max-width: 700px) { .main-grid { grid-template-columns: 1fr; } }
+
+  /* ── CARD ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 28px;
+    animation: fadeUp .5s ease both;
+  }
+
+  .card-title {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .card-title::before {
+    content: '';
+    display: block;
+    width: 3px; height: 14px;
+    background: var(--gold);
+    border-radius: 2px;
+  }
+
+  /* ── UPLOAD ZONE ── */
+  #drop-zone {
+    border: 2px dashed var(--border);
+    border-radius: 12px;
+    padding: 40px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all .25s;
+    position: relative;
+  }
+
+  #drop-zone:hover, #drop-zone.dragover {
+    border-color: var(--gold);
+    background: rgba(245,200,66,.04);
+  }
+
+  #drop-zone .icon {
+    font-size: 48px;
+    margin-bottom: 14px;
+    display: block;
+    transition: transform .3s;
+  }
+
+  #drop-zone:hover .icon { transform: translateY(-4px); }
+
+  #drop-zone p {
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+
+  #drop-zone small {
+    color: var(--text-dim);
+    font-size: 13px;
+  }
+
+  #file-input { display: none; }
+
+  /* ── PREVIEW ── */
+  #preview-wrap {
+    margin-top: 18px;
+    display: none;
+  }
+
+  #preview-wrap img {
+    width: 100%;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    display: block;
+  }
+
+  #file-name {
+    font-size: 13px;
+    color: var(--text-dim);
+    margin-top: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    text-align: center;
+  }
+
+  /* ── BUTTON ── */
+  #btn-submit {
+    width: 100%;
+    margin-top: 20px;
+    padding: 14px;
+    background: var(--gold);
+    color: #0b0e17;
+    font-family: 'Be Vietnam Pro', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all .2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  #btn-submit:hover { background: #ffd84a; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(245,200,66,.3); }
+  #btn-submit:active { transform: translateY(0); }
+  #btn-submit:disabled { opacity: .5; cursor: not-allowed; transform: none; box-shadow: none; }
+
+  /* ── LOADER ── */
+  .spinner {
+    width: 18px; height: 18px;
+    border: 2px solid rgba(0,0,0,.2);
+    border-top-color: #0b0e17;
+    border-radius: 50%;
+    animation: spin .7s linear infinite;
+    display: none;
+  }
+
+  /* ── RESULT SECTION ── */
+  #result-section { display: none; }
+
+  /* ── RESULT IMAGE ── */
+  #result-img-wrap img {
+    width: 100%;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    display: block;
+  }
+
+  /* ── STATS ROW ── */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .stat-box {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 12px;
+    text-align: center;
+  }
+
+  .stat-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--text-dim);
+    margin-bottom: 6px;
+  }
+
+  .stat-value {
+    font-size: 22px;
+    font-weight: 800;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .stat-value.gold   { color: var(--gold); }
+  .stat-value.green  { color: var(--green); }
+  .stat-value.blue   { color: var(--blue); }
+
+  /* ── TOTAL VND ── */
+  .total-vnd {
+    background: linear-gradient(135deg, rgba(245,200,66,.15), rgba(245,200,66,.05));
+    border: 1px solid rgba(245,200,66,.3);
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+    margin-bottom: 20px;
+  }
+
+  .total-vnd .label {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    color: var(--gold-dim);
+    margin-bottom: 6px;
+  }
+
+  .total-vnd .amount {
+    font-size: 32px;
+    font-weight: 800;
+    color: var(--gold);
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: -.02em;
+  }
+
+  /* ── BILLS TABLE ── */
+  .bills-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+
+  .bills-table th {
+    text-align: left;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .07em;
+    color: var(--text-dim);
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .bills-table td {
+    padding: 10px 10px;
+    border-bottom: 1px solid rgba(36,45,69,.5);
+    vertical-align: middle;
+  }
+
+  .bills-table tr:last-child td { border-bottom: none; }
+
+  .pill {
+    display: inline-block;
+    padding: 3px 9px;
+    border-radius: 100px;
+    font-size: 12px;
+    font-weight: 600;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .pill-gold  { background: rgba(245,200,66,.15); color: var(--gold); }
+  .pill-blue  { background: rgba(96,165,250,.12); color: var(--blue); }
+  .pill-green { background: rgba(34,197,94,.12);  color: var(--green); }
+  .pill-red   { background: rgba(239,68,68,.12);  color: var(--red); }
+
+  .agree-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 5px;
+  }
+
+  .agree-yes { background: var(--green); }
+  .agree-no  { background: var(--red); }
+
+  .vnd-val {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 600;
+    font-size: 13px;
+    color: var(--text);
+  }
+
+  /* ── EMPTY STATE ── */
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-dim);
+    font-size: 14px;
+  }
+
+  .empty-state .icon { font-size: 36px; margin-bottom: 10px; display: block; }
+
+  /* ── RESET BTN ── */
+  #btn-reset {
+    width: 100%;
+    margin-top: 14px;
+    padding: 11px;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    border-radius: 10px;
+    font-family: 'Be Vietnam Pro', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all .2s;
+  }
+
+  #btn-reset:hover { border-color: var(--text-dim); color: var(--text); }
+
+  /* ── ANIMATIONS ── */
+  @keyframes fadeDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  @keyframes popIn {
+    from { opacity: 0; transform: scale(.95); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+
+  .pop-in { animation: popIn .35s ease both; }
+
+  /* ── FOOTER ── */
+  footer {
+    text-align: center;
+    margin-top: 60px;
+    color: var(--text-dim);
+    font-size: 13px;
+    padding-bottom: 20px;
+  }
+
+  footer span { color: var(--gold); font-weight: 700; }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- HEADER -->
+  <header>
+    <div class="badge">🇻🇳 AI Demo</div>
+    <h1>Nhận Dạng <span>Tiền Polymer</span><br>Việt Nam</h1>
+    <div class="subtitle">
+      <span class="tag">YOLOv8</span>
+      <span style="color:var(--border)">+</span>
+      <span class="tag">EfficientNetB0</span>
+      <span style="color:var(--text-dim)">— 9 mệnh giá</span>
+    </div>
+  </header>
+
+  <!-- MAIN GRID -->
+  <div class="main-grid">
+
+    <!-- LEFT: UPLOAD -->
+    <div class="card" style="animation-delay:.05s">
+      <div class="card-title">Upload ảnh</div>
+
+      <div id="drop-zone">
+        <span class="icon">🖼️</span>
+        <p>Kéo thả ảnh vào đây</p>
+        <small>hoặc click để chọn file · JPG, PNG, JPEG</small>
+        <input type="file" id="file-input" accept="image/*">
+      </div>
+
+      <div id="preview-wrap">
+        <img id="preview-img" src="" alt="preview">
+        <div id="file-name"></div>
+      </div>
+
+      <button id="btn-submit" disabled>
+        <div class="spinner" id="spinner"></div>
+        <span id="btn-text">🔍 Nhận dạng tiền</span>
+      </button>
+
+      <button id="btn-reset" style="display:none">↺ Chọn ảnh khác</button>
+
+      <!-- MODEL INFO -->
+      <div style="margin-top:24px; border-top:1px solid var(--border); padding-top:20px;">
+        <div class="card-title">Mô hình</div>
+        <div style="display:flex;flex-direction:column;gap:10px;font-size:13px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span style="color:var(--text-dim)">Stage 1 — Phát hiện</span>
+            <span class="pill pill-blue">YOLOv8</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span style="color:var(--text-dim)">Stage 2 — Phân loại</span>
+            <span class="pill pill-gold">EfficientNetB0</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span style="color:var(--text-dim)">Fusion weight α</span>
+            <span class="pill pill-green" style="font-family:'JetBrains Mono',monospace">0.4 / 0.6</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: RESULT -->
+    <div class="card" style="animation-delay:.1s" id="initial-card">
+      <div class="empty-state">
+        <span class="icon">💡</span>
+        <p>Upload ảnh để bắt đầu nhận dạng</p>
+        <small style="margin-top:8px;display:block">Hỗ trợ: 1k · 2k · 5k · 10k · 20k · 50k · 100k · 200k · 500k</small>
+      </div>
+    </div>
+
+    <div class="card" style="animation-delay:.1s;display:none" id="result-section">
+      <div class="card-title">Kết quả nhận dạng</div>
+
+      <!-- Ảnh kết quả -->
+      <div id="result-img-wrap" style="margin-bottom:20px;">
+        <img id="result-img" src="" alt="result">
+      </div>
+
+      <!-- Tổng tiền -->
+      <div class="total-vnd">
+        <div class="label">💰 Tổng mệnh giá</div>
+        <div class="amount" id="total-amount">0 VND</div>
+      </div>
+
+      <!-- Stats row -->
+      <div class="stats-row">
+        <div class="stat-box">
+          <div class="stat-label">Tờ tiền</div>
+          <div class="stat-value blue" id="stat-bills">0</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Đồng thuận</div>
+          <div class="stat-value green" id="stat-agree">0</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Bất đồng</div>
+          <div class="stat-value" style="color:var(--red)" id="stat-disagree">0</div>
+        </div>
+      </div>
+
+      <!-- Bảng chi tiết -->
+      <div class="card-title">Chi tiết từng tờ</div>
+      <div style="overflow-x:auto;">
+        <table class="bills-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Mệnh giá</th>
+              <th>YOLO</th>
+              <th>EfficientNet</th>
+              <th>Trạng thái</th>
+              <th>VND</th>
+            </tr>
+          </thead>
+          <tbody id="bills-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div><!-- /main-grid -->
+
+  <footer>
+    Đề tài: <span>Nhận Diện Mệnh Giá Tiền Polymer Việt Nam</span> · YOLOv8 + EfficientNetB0
+  </footer>
+
+</div><!-- /container -->
+
+<script>
+const dropZone   = document.getElementById('drop-zone');
+const fileInput  = document.getElementById('file-input');
+const previewWrap= document.getElementById('preview-wrap');
+const previewImg = document.getElementById('preview-img');
+const fileNameEl = document.getElementById('file-name');
+const btnSubmit  = document.getElementById('btn-submit');
+const btnReset   = document.getElementById('btn-reset');
+const spinner    = document.getElementById('spinner');
+const btnText    = document.getElementById('btn-text');
+
+const initialCard   = document.getElementById('initial-card');
+const resultSection = document.getElementById('result-section');
+
+let selectedFile = null;
+
+// ── DRAG & DROP ──
+dropZone.addEventListener('click', () => fileInput.click());
+
+dropZone.addEventListener('dragover', e => {
+  e.preventDefault();
+  dropZone.classList.add('dragover');
+});
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropZone.classList.remove('dragover');
+  const f = e.dataTransfer.files[0];
+  if (f && f.type.startsWith('image/')) handleFile(f);
+});
+
+fileInput.addEventListener('change', () => {
+  if (fileInput.files[0]) handleFile(fileInput.files[0]);
+});
+
+function handleFile(file) {
+  selectedFile = file;
+  const reader = new FileReader();
+  reader.onload = e => {
+    previewImg.src = e.target.result;
+    previewWrap.style.display = 'block';
+    fileNameEl.textContent = file.name;
+    btnSubmit.disabled = false;
+  };
+  reader.readAsDataURL(file);
+}
+
+// ── RESET ──
+btnReset.addEventListener('click', () => {
+  selectedFile = null;
+  fileInput.value = '';
+  previewWrap.style.display = 'none';
+  previewImg.src = '';
+  btnSubmit.disabled = true;
+  btnReset.style.display = 'none';
+  initialCard.style.display = 'block';
+  resultSection.style.display = 'none';
+});
+
+// ── SUBMIT ──
+btnSubmit.addEventListener('click', async () => {
+  if (!selectedFile) return;
+
+  // Loading state
+  btnSubmit.disabled = true;
+  spinner.style.display = 'block';
+  btnText.textContent = 'Đang nhận dạng...';
+
+  const formData = new FormData();
+  formData.append('file', selectedFile);
+
+  try {
+    const res  = await fetch('/predict', { method: 'POST', body: formData });
+    const data = await res.json();
+
+    if (data.error) {
+      alert('Lỗi: ' + data.error);
+      return;
+    }
+
+    showResult(data);
+
+  } catch (err) {
+    alert('Lỗi kết nối server: ' + err.message);
+  } finally {
+    btnSubmit.disabled = false;
+    spinner.style.display = 'none';
+    btnText.textContent = '🔍 Nhận dạng tiền';
+    btnReset.style.display = 'block';
+  }
+});
+
+// ── SHOW RESULT ──
+function showResult(data) {
+  initialCard.style.display = 'none';
+  resultSection.style.display = 'block';
+  resultSection.classList.add('pop-in');
+
+  // Ảnh kết quả
+  document.getElementById('result-img').src = '/' + data.result_img + '?t=' + Date.now();
+
+  // Tổng tiền
+  document.getElementById('total-amount').textContent =
+    data.total_value.toLocaleString('vi-VN') + ' VND';
+
+  // Stats
+  const disagree = data.total_bills - data.agree_count;
+  document.getElementById('stat-bills').textContent    = data.total_bills;
+  document.getElementById('stat-agree').textContent    = data.agree_count;
+  document.getElementById('stat-disagree').textContent = disagree;
+
+  // Table
+  const tbody = document.getElementById('bills-tbody');
+  tbody.innerHTML = '';
+
+  if (data.detections.length === 0) {
+    tbody.innerHTML = `
+      <tr><td colspan="6" style="text-align:center;padding:24px;color:var(--text-dim)">
+        ⚠️ Không phát hiện tờ tiền nào
+      </td></tr>`;
+    return;
+  }
+
+  data.detections.forEach((d, i) => {
+    const agreeHtml = d.agree
+      ? `<span class="agree-dot agree-yes"></span>Đồng thuận`
+      : `<span class="agree-dot agree-no"></span>Bất đồng`;
+
+    const row = document.createElement('tr');
+    row.style.animationDelay = (i * 0.05) + 's';
+    row.classList.add('pop-in');
+    row.innerHTML = `
+      <td style="color:var(--text-dim);font-weight:700">${d.index}</td>
+      <td><span class="pill pill-gold">${d.final_class}</span>
+          <small style="color:var(--text-dim);margin-left:4px">${d.final_conf}%</small></td>
+      <td><span style="font-family:'JetBrains Mono',monospace;font-size:12px">${d.yolo_class}</span>
+          <small style="color:var(--text-dim)"> ${d.yolo_conf}%</small></td>
+      <td><span style="font-family:'JetBrains Mono',monospace;font-size:12px">${d.eff_class}</span>
+          <small style="color:var(--text-dim)"> ${d.eff_conf}%</small></td>
+      <td style="font-size:12px;color:${d.agree ? 'var(--green)' : 'var(--red)'}">${agreeHtml}</td>
+      <td class="vnd-val">${d.value.toLocaleString('vi-VN')}</td>
+    `;
+    tbody.appendChild(row);
+  });
+
+  // Tổng row
+  const totalRow = document.createElement('tr');
+  totalRow.style.borderTop = '2px solid var(--border)';
+  totalRow.innerHTML = `
+    <td colspan="5" style="text-align:right;font-weight:700;padding:12px 10px;font-size:14px;color:var(--gold)">
+      TỔNG CỘNG
+    </td>
+    <td style="font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:800;color:var(--gold);padding:12px 10px">
+      ${data.total_value.toLocaleString('vi-VN')}
+    </td>
+  `;
+  tbody.appendChild(totalRow);
+}
+</script>
+
+</body>
+</html>
