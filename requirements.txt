@@ -4,3 +4,6 @@ torchvision
 Pillow
 numpy
 huggingface-hub
+opencv-python-headless
+ultralytics
+flask
